@@ -13,6 +13,7 @@ matplotlib = "*"
 torch = "*"
 scikit-learn = "*"
 torchvision = "*"
+tensorboard = "*"
 
 
 [build-system]
