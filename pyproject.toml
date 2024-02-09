@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "algorithm-study"
+version = "0.1.0"
+description = ""
+authors = ["zx.feng <zx.feng@zuche.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "*"
+pandas = "*"
+matplotlib = "*"
+torch = "*"
+scikit-learn = "*"
+torchvision = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
