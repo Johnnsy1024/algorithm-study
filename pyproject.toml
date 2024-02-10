@@ -14,7 +14,12 @@ torch = "*"
 scikit-learn = "*"
 torchvision = "*"
 tensorboard = "*"
+loguru = "*"
+torch-tb-profiler = "*"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,5 +1,0 @@
-*/.idea/*
-*/__pycache__/
-*.pyc
-*/tests/*
-*/.ipynb_checkpoints/
