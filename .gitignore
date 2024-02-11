@@ -4,3 +4,5 @@
 **/viz/
 src/dl/time_series_prediction/airline_passenger_pred/file/
 **/.github/
+**/fig/
+**/.DS_Store

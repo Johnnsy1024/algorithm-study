@@ -12,11 +12,15 @@ from sklearn.metrics import (
 )
 from data.dataloader import DataLoaderBuilder
 from model.lstm2linear import LSTM2LINEAR
+
+# from model.lightgbm import lgb_model
 from torch.utils.data import DataLoader
 from loguru import logger
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+import lightgbm as lgb
+import argparse
 
 
 def train(
@@ -49,9 +53,7 @@ def train(
             x = x.to(device)
             y = y.to(device)
             y_pred = model(x)
-            mape_val = mae(
-                y_pred.detach().cpu().numpy(), y.cpu().detach().cpu().numpy()
-            )
+            mape_val = mae(y_pred.detach().cpu().numpy(), y.detach().cpu().numpy())
             mape_record += mape_val
             loss = loss_func(y_pred, y)
             loss_record += loss.item()
@@ -104,12 +106,27 @@ if __name__ == "__main__":
     #     else "mps" if torch.backends.mps.is_available() else "cpu"
     # )
     device = "cpu"
-
-    dataloader = DataLoaderBuilder(
-        "./file/international-airline-passengers.csv",
+    parse = argparse.ArgumentParser()
+    parse.add_argument(
+        "--model", "-m", type=str, default="lstm", help="Setting the model to train"
     )
-
-    train_dataloader = dataloader.get_train_dataloader()
-    test_dataloader = dataloader.get_test_dataloader()
-    model = LSTM2LINEAR().to(device)
-    train(model, train_dataloader, test_dataloader, device, epoch=1000)
+    parse.add_argument(
+        "--epoch",
+        "-e",
+        type=int,  # type: ignore
+        default=1000,
+        help="Setting the epoch number to train",
+    )
+    args = parse.parse_args()
+    dataloader = DataLoaderBuilder("./file/international-airline-passengers.csv")
+    if args.model == "lstm":
+        train_dataloader = dataloader.get_train_dataloader()
+        test_dataloader = dataloader.get_test_dataloader()
+        model = LSTM2LINEAR().to(device)
+        train(model, train_dataloader, test_dataloader, device, epoch=args.epoch)
+    elif args.model == "lgb":
+        train_x, train_y = dataloader.get_train_data()
+        test_x, test_y = dataloader.get_test_data()
+        lgb_model = lgb.LGBMRegressor()
+        lgb_model = lgb_model.fit(train_x.squeeze(axis=-1), train_y.squeeze(axis=-1))
+        print(lgb_model.evals_result_)
