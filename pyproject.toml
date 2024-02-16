@@ -17,6 +17,7 @@ tensorboard = "*"
 loguru = "*"
 torch-tb-profiler = "*"
 lightgbm = '*'
+seaborn = '*'
 
 
 [tool.poetry.group.dev.dependencies]
