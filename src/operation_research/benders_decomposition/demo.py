@@ -6,28 +6,17 @@ LastEditTime: 2024-03-11 17:35:17
 Copyright (c) 2024 by FaizalFeng, All Rights Reserved.
 """
 
-# import gurobipy as gp
+import gurobipy as gp
 
-# master_problem = gp.Model("Master Problem")
-# y = master_problem.addVar(vtype=gp.GRB.INTEGER, name="y")
-# q = master_problem.addVar(lb=float("inf"), vtype=gp.GRB.CONTINUOUS, name="q")
-# master_problem.setObjective(1.045 * y + q)
-# master_problem.optimize()
 
-from gurobipy import *
+master_problem = gp.Model("Master Problem")
+y = master_problem.addVar(vtype=gp.GRB.INTEGER, name="y")
+q = master_problem.addVar(lb=-float("inf"), vtype=gp.GRB.CONTINUOUS, name="q")
+master_problem.setObjective(1.045 * y + q, sense=gp.GRB.MINIMIZE)
+master_problem.optimize()
 
-MP = Model("Benders decomposition-MP")
+print(f"y的值为{y.X}")
+print(f"q的值为{q.X}")
 
-""" create decision variables """
-y = MP.addVar(lb=0, ub=GRB.INFINITY, vtype=GRB.INTEGER, name="y")
-# z = MP.addVar(lb=0, ub=GRB.INFINITY, vtype=GRB.INTEGER, name="z")
-q = MP.addVar(lb=-float("inf"), vtype=GRB.CONTINUOUS, name="q")
-# MP.addConstr(z - 1.045 * y + q)
-MP.setObjective(1.045 * y + q, GRB.MAXIMIZE)
-
-MP.addConstr(1000 - y >= 0, name="benders feasibility cut iter 1")
-
-MP.optimize()
-print("\n\n\n")
-print("Obj:", MP.ObjVal)
-print("y = %4.1f" % (y.x))
+sub_problem = gp.Model("Sub Problem")
+x = sub_problem.addVar()
