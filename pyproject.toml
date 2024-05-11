@@ -2,26 +2,16 @@
 name = "algorithm-study"
 version = "0.1.0"
 description = ""
-authors = ["zx.feng <zx.feng@zuche.com>"]
+authors = ["FaizalFeng <fzx401@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
 numpy = "*"
-pandas = "*"
-matplotlib = "*"
-scikit-learn = "*"
-torchvision = "*"
-tensorboard = "*"
-loguru = "*"
-torch-tb-profiler = "*"
-lightgbm = '*'
-seaborn = '*'
-gurobipy = "^11.0"
-
-
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.29.2"
+d2l = "*"
+ipykernel = "^6.29.4"
+torch = "^2.3.0"
+torchvision = "^0.18.0"
 
 [build-system]
 requires = ["poetry-core"]
