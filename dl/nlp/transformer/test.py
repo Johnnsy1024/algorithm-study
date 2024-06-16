@@ -1,22 +1,25 @@
-import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import torch
+from Encoder import PositionalEncoding
+
+pos_encod = PositionalEncoding(512)
+print(pos_encod(torch.randint(low=0, high=32, size=(128, 32))).shape)
+plt.figure(dpi=300)
+sns.heatmap(
+    pos_encod(torch.randint(low=0, high=32, size=(128, 32))).detach().numpy()[0, ...],
+    cmap="viridis",
+)
+plt.savefig("./vector_false.png")
+pos_encod = PositionalEncoding(512)
+print(pos_encod(torch.randint(low=0, high=32, size=(128, 32))).shape)
+plt.figure(dpi=300)
+sns.heatmap(
+    pos_encod(torch.randint(low=0, high=32, size=(128, 32))).detach().numpy()[0, ...],
+    cmap="viridis",
+)
+plt.savefig("./vector_true.png")
 
 
-def generate_src_mask(src, src_pad_idx):
-    # src_mask = (src != src_pad_idx).astype(int)
-    return np.where(src != src_pad_idx, 0, -1e20).astype(int)
-
-
-def softmax(x):
-    return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
-
-
-if __name__ == "__main__":
-    np.random.seed(0)
-    src = np.random.randint(0, 8, (3, 10))
-    src_mask = generate_src_mask(src, 0)
-    print("src:", "\n", src)
-    print("src + src_mask:", "\n", src + src_mask)
-    print("src_mask:", "\n", src_mask)
-    print("-----------------")
-    print("softmax(src):", "\n", softmax(src))
-    print("softmax(src + src_mask):", "\n", softmax(src + src_mask))
+embed_demo = torch.nn.Embedding(32, 512)
+print(embed_demo.weight.shape)
