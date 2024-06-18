@@ -62,9 +62,9 @@ class InputBlock(nn.Module):
         super().__init__()
         self.input_embedding = InputEmbedding(vocab_size, embed_size)
         self.positional_embedding = PositionalEncoding(embed_size)
-        self.key_embedding = nn.Embedding(vocab_size, embed_size)
-        self.query_embedding = nn.Embedding(vocab_size, embed_size)
-        self.value_embedding = nn.Embedding(vocab_size, embed_size)
+        # self.key_embedding = nn.Embedding(vocab_size, embed_size)
+        # self.query_embedding = nn.Embedding(vocab_size, embed_size)
+        # self.value_embedding = nn.Embedding(vocab_size, embed_size)
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len]
