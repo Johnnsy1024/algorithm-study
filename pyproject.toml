@@ -12,6 +12,8 @@ d2l = "*"
 ipykernel = "^6.29.4"
 torch = "^2.3.0"
 torchvision = "^0.18.0"
+huggingface = "^0.0.1"
+datasets = "^2.20.0"
 
 [build-system]
 requires = ["poetry-core"]
