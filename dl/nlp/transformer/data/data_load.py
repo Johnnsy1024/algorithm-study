@@ -1,11 +1,12 @@
 from pathlib import Path
 
 import datasets
-import pandas as pd
 
-data = datasets.load_from_disk(str(Path().cwd() / "datasets_cache/wmt/wmt14"))
-print(data)
+cur_dir = str(Path().cwd())
+if cur_dir.split("/")[-1] != "data":
+    cur_dir += "/data"
+data = datasets.load_from_disk(cur_dir + "/datasets_cache/wmt/wmt14")
 
-pd.DataFrame(data["train"])
-pd.DataFrame(data["test"])
-pd.DataFrame(data["validation"])
+train_data_raw = data["train"]
+test_data_raw = data["test"]
+valid_data_raw = data["validation"]
