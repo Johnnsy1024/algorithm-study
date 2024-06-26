@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class InputEmbedding(nn.Module):
-    def __init__(self, vocab_size: int, embed_size: int, max_seq_len: int = 500):
+    def __init__(self, vocab_size: int, embed_size: int, max_seq_len: int = 512):
         super().__init__()
         self.input_embedding = nn.Embedding(vocab_size, embed_size)
         self.max_seq_len = max_seq_len
@@ -15,7 +15,7 @@ class InputEmbedding(nn.Module):
 
 
 class PositionalEncoding:
-    def __init__(self, embed_size: int, max_seq_len: int = 500):
+    def __init__(self, embed_size: int, max_seq_len: int = 512):
         self.embed_size = embed_size
         self.max_seq_len = max_seq_len
 
@@ -166,7 +166,7 @@ class Encoder(nn.Module):
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
-        max_seq_len: int = 500,
+        max_seq_len: int = 512,
         src_mask: bool = False,
         block_num: int = 6,
     ):
