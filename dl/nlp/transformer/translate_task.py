@@ -1,4 +1,4 @@
-from data.data_load import test_data_raw, train_data_raw, valid_data_raw
+from data_prepare.data_load import test_data_raw, train_data_raw, valid_data_raw
 
 
 # train_data_raw.assign(

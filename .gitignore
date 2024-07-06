@@ -7,6 +7,8 @@ src/dl/time_series_prediction/airline_passenger_pred/file/
 **/fig/
 **/.DS_Store
 .vscode/
+**/datasets_cache/
+*.pkl
 
 **/data/datasets_cache
 # Byte-compiled / optimized / DLL files
