@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class InputEmbedding(nn.Module):
-    def __init__(self, vocab_size: int, embed_size: int, max_seq_len: int = 512):
+    def __init__(self, vocab_size: int, embed_size: int, max_seq_len: int = 128):
         super().__init__()
         self.input_embedding = nn.Embedding(vocab_size, embed_size)
         self.max_seq_len = max_seq_len
@@ -15,7 +15,7 @@ class InputEmbedding(nn.Module):
 
 
 class PositionalEncoding:
-    def __init__(self, embed_size: int, max_seq_len: int = 512):
+    def __init__(self, embed_size: int, max_seq_len: int = 128):
         self.embed_size = embed_size
         self.max_seq_len = max_seq_len
 
@@ -136,7 +136,7 @@ class EncoderBlock(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 512,
+        embed_size: int = 64,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
@@ -162,18 +162,18 @@ class Encoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 512,
+        embed_size: int = 64,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
-        max_seq_len: int = 512,
-        src_mask: bool = False,
+        max_seq_len: int = 128,
+        src_mask_flag: bool = False,
         block_num: int = 6,
     ):
         super().__init__()
         self.vocab_size = vocab_size
         self.embed_size = embed_size
-        self.src_mask = src_mask
+        self.src_mask_flag = src_mask_flag
         self.num_heads = num_heads
         self.dropput = dropout
         self.fnn_hidden_size = ffn_hidden_size
@@ -198,7 +198,7 @@ class Encoder(nn.Module):
             input_x = F.pad(input_x, (0, self.max_seq_len - input_x.shape[1]))
         else:
             input_x = input_x[..., : self.max_seq_len]
-        if self.src_mask:
+        if self.src_mask_flag:
             src_mask = self.gen_src_mask(input_x)
         else:
             src_mask = None
