@@ -1,16 +1,15 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from .Encoder import FeedForward, InputBlock, MultiHeadAttention
+from Encoder import FeedForward, InputBlock, MultiHeadAttention
 
 
 class DecoderBlock(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int,
-        num_heads: int,
+        embed_size: int = 512,
+        num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
         trg_mask: torch.tensor = None,
@@ -93,7 +92,7 @@ class DecoderMultiHeadAttention(MultiHeadAttention):
         attention = (key.permute(0, 2, 1, 3) @ query.permute(0, 2, 3, 1)) / (
             self.embed_size**0.5
         )
-        out = F.softmax(attention, dim=-1) @ value.permute(0, 2, 1, 3).reshape(
+        out = (F.softmax(attention, dim=-1) @ value.permute(0, 2, 1, 3)).reshape(
             (batch_size, seq_len, -1)
         )
         return self.dropout(out)
@@ -103,11 +102,11 @@ class Decoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 512,
+        embed_size: int = 120,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
-        max_seq_len: int = 500,
+        max_seq_len: int = 64,
         trg_mask: bool = False,
         block_num: int = 6,
     ):
@@ -128,13 +127,15 @@ class Decoder(nn.Module):
         trg_mask = torch.where((trg != trg_padding_idx), 1, 0).unsqueeze(1).unsqueeze(2)
         return trg_mask
 
-    def forward(self, input_x: torch.tensor):
-        if input_x.shape[1] <= self.max_seq_len:
-            input_x = F.pad(input_x, (0, self.max_seq_len - input_x.shape[1]))
+    def forward(
+        self, trg: torch.tensor, encoder_key: torch.tensor, encoder_value: torch.tensor
+    ):
+        if trg.shape[1] <= self.max_seq_len:
+            trg = F.pad(trg, (0, self.max_seq_len - trg.shape[1]))
         else:
-            input_x = input_x[..., : self.max_seq_len]
+            trg = trg[..., : self.max_seq_len]
         if self.trg_mask:
-            trg_mask = self.gen_trg_mask(input_x)
+            trg_mask = self.gen_trg_mask(trg)
         else:
             trg_mask = None
         self.decoder_block = DecoderBlock(
@@ -145,7 +146,7 @@ class Decoder(nn.Module):
             trg_mask=trg_mask,
         )
         self.decoder = nn.ModuleList([self.decoder_block for _ in range(self.block_num)])
-        x = self.input_block(input_x)
+        x = self.input_block(trg)
         for layer in self.decoder:
-            x = layer(x)
+            x = layer(x, encoder_key, encoder_value)
         return x

@@ -58,17 +58,17 @@ class PositionalEncoding:
 
 
 class InputBlock(nn.Module):
-    def __init__(self, vocab_size: int, embed_size: int):
+    def __init__(self, vocab_size: int, embed_size: int, device: str = "cpu"):
         super().__init__()
+        self.device = device
         self.input_embedding = InputEmbedding(vocab_size, embed_size)
         self.positional_embedding = PositionalEncoding(embed_size)
-        # self.key_embedding = nn.Embedding(vocab_size, embed_size)
-        # self.query_embedding = nn.Embedding(vocab_size, embed_size)
-        # self.value_embedding = nn.Embedding(vocab_size, embed_size)
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len]
-        x = self.input_embedding(input_x) + self.positional_embedding(input_x)
+        x = self.input_embedding(input_x) + self.positional_embedding(input_x).to(
+            self.device
+        )
 
         return x
 
@@ -77,8 +77,8 @@ class MultiHeadAttention(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int,
-        num_heads: int,
+        embed_size: int = 512,
+        num_heads: int = 8,
         dropout: float = 0.1,
         src_mask: torch.tensor = None,
     ):
@@ -117,7 +117,7 @@ class MultiHeadAttention(nn.Module):
 
 class FeedForward(nn.Module):
     def __init__(
-        self, embed_size: int, ffn_hidden_size: int = 2048, dropout: float = 0.1
+        self, embed_size: int = 512, ffn_hidden_size: int = 2048, dropout: float = 0.1
     ):
         super().__init__()
         self.linear_1 = nn.Linear(embed_size, ffn_hidden_size)
@@ -136,7 +136,7 @@ class EncoderBlock(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 64,
+        embed_size: int = 512,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
@@ -162,13 +162,14 @@ class Encoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 64,
+        embed_size: int = 120,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
-        max_seq_len: int = 128,
-        src_mask_flag: bool = False,
+        max_seq_len: int = 64,
+        src_mask_flag: bool = True,
         block_num: int = 6,
+        device: str = "cpu",
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -182,7 +183,7 @@ class Encoder(nn.Module):
         self.dropout = dropout
         self.ffn_hidden_size = ffn_hidden_size
 
-        self.input_block = InputBlock(vocab_size, embed_size)
+        self.input_block = InputBlock(vocab_size, embed_size, device)
 
     def gen_src_mask(self, src, src_padding_idx: int = 0):
         # src: [batch_size, seq_len]
@@ -219,6 +220,7 @@ class Encoder(nn.Module):
 
 
 if __name__ == "__main__":
-    input_x = torch.randint(low=0, high=32, size=(32, 32))
-    encoder = Encoder(vocab_size=32, src_mask=True)
-    print(encoder(input_x).shape)
+    pass
+    # input_x = torch.randint(low=0, high=32, size=(32, 32))
+    # encoder = Encoder(vocab_size=32, src_mask_flag=True)
+    # print(encoder(input_x).shape)
