@@ -21,8 +21,8 @@ def tokenizer_train(corpus: List[str]):
     tokenizer = Tokenizer(BPE())
     tokenizer.pre_tokenizer = Whitespace()
     trainer = BpeTrainer(
-        vocab_size=5000,
-        special_tokens=["[PAD]", "[UNK]", "[CLS]", "[BOS]", "[EOS]", "[MASK]"],
+        vocab_size=30000,
+        special_tokens=["[PAD]", "[UNK]", "[BOS]", "[EOS]", "[MASK]"],
         show_progress=True,
     )
     tokenizer.train_from_iterator(corpus, trainer)

@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-numpy = "*"
+numpy = "<2.0.0"
 d2l = "*"
 ipykernel = "^6.29.4"
 torch = "^2.3.0"
@@ -18,6 +18,16 @@ transformers = "^4.41.2"
 tokenizers = "^0.19.1"
 sentencepiece = "^0.2.0"
 xgboost = "^2.1.0"
+gradio = "^4.42.0"
+mdtex2html = "^1.3.0"
+lightgbm = "*"
+graphviz = "^0.20.3"
+kaggle = "^1.6.17"
+
+[[tool.poetry.source]]
+name = "mirrors"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
 
 [build-system]
 requires = ["poetry-core"]

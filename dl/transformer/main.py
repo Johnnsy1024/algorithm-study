@@ -1,7 +1,6 @@
 import pandas as pd
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from data_tokenize import TranslateDataset, extract_raw_data, get_input, tokenizer_train
 from Decoder import Decoder
 from Encoder import Encoder
@@ -71,25 +70,25 @@ class Transformer(nn.Module):
 
 vocab_size = tokenizer.get_vocab_size()
 
-device = torch.device("cpu")
+device = torch.device("mps:0")
 
 encoder = Encoder(vocab_size, device=device)
-decoder = Decoder(vocab_size)
+decoder = Decoder(vocab_size, device=device)
 model = Transformer(encoder, decoder, device)
 
-model = model.to(device)
 EPOCH = 10
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-1)
 # warmup_scheduler = LinearLR(optimizer, start_factor=0.2, total_iters=10)
 # base_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 # post_warmup_scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
+model = model.to(device)
 loss_func = nn.CrossEntropyLoss()
 for epoch in range(EPOCH):
     for batch_idx, (src, trg) in enumerate(train_dataloader):
         optimizer.zero_grad()
-        src = src.to(device)
-        trg = trg.to(device)
+        # src = src.to(device)
+        # trg = trg.to(device)
         output = model(src, trg)
         loss = loss_func(
             output.view(

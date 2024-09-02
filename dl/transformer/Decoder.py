@@ -109,6 +109,7 @@ class Decoder(nn.Module):
         max_seq_len: int = 64,
         trg_mask: bool = False,
         block_num: int = 6,
+        device: str = "cpu",
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -121,7 +122,7 @@ class Decoder(nn.Module):
         self.dropout = dropout
         self.ffn_hidden_size = ffn_hidden_size
         self.trg_mask = trg_mask
-        self.input_block = InputBlock(vocab_size, embed_size)
+        self.input_block = InputBlock(vocab_size, embed_size, device)
 
     def gen_trg_mask(self, trg, trg_padding_idx: int = 0):
         trg_mask = torch.where((trg != trg_padding_idx), 1, 0).unsqueeze(1).unsqueeze(2)

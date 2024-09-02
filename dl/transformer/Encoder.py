@@ -4,9 +4,15 @@ import torch.nn.functional as F
 
 
 class InputEmbedding(nn.Module):
-    def __init__(self, vocab_size: int, embed_size: int, max_seq_len: int = 128):
+    def __init__(
+        self,
+        vocab_size: int,
+        embed_size: int,
+        max_seq_len: int = 128,
+        device: str = "cpu",
+    ):
         super().__init__()
-        self.input_embedding = nn.Embedding(vocab_size, embed_size)
+        self.input_embedding = nn.Embedding(vocab_size, embed_size, device=device)
         self.max_seq_len = max_seq_len
 
     def forward(self, input_x: torch.tensor):  # input_x: [batch_size, seq_len]
@@ -61,14 +67,12 @@ class InputBlock(nn.Module):
     def __init__(self, vocab_size: int, embed_size: int, device: str = "cpu"):
         super().__init__()
         self.device = device
-        self.input_embedding = InputEmbedding(vocab_size, embed_size)
+        self.input_embedding = InputEmbedding(vocab_size, embed_size, device=device)
         self.positional_embedding = PositionalEncoding(embed_size)
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len]
-        x = self.input_embedding(input_x) + self.positional_embedding(input_x).to(
-            self.device
-        )
+        x = self.input_embedding(input_x) + self.positional_embedding(input_x)
 
         return x
 
@@ -81,17 +85,18 @@ class MultiHeadAttention(nn.Module):
         num_heads: int = 8,
         dropout: float = 0.1,
         src_mask: torch.tensor = None,
+        device: str = "cpu",
     ):
         super(MultiHeadAttention, self).__init__()
         assert embed_size % num_heads == 0, "embed_size must be divisible by num_heads"
         self.embed_size = embed_size
         self.num_heads = num_heads
         self.src_mask = src_mask
-        self.input_embedding = InputEmbedding(vocab_size, embed_size)
+        self.input_embedding = InputEmbedding(vocab_size, embed_size, device)
         self.positional_encoding = PositionalEncoding(embed_size)
-        self.linear_key = nn.Linear(embed_size, embed_size)
-        self.linear_query = nn.Linear(embed_size, embed_size)
-        self.linear_value = nn.Linear(embed_size, embed_size)
+        self.linear_key = nn.Linear(embed_size, embed_size).to(device)
+        self.linear_query = nn.Linear(embed_size, embed_size).to(device)
+        self.linear_value = nn.Linear(embed_size, embed_size).to(device)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, input_x: torch.tensor):
@@ -141,11 +146,12 @@ class EncoderBlock(nn.Module):
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
         src_mask: torch.tensor = None,
+        device: str = "cpu",
     ):
         super().__init__()
         assert embed_size % num_heads == 0, "embed_size must be divisible by num_heads"
         self.multi_head_attention = MultiHeadAttention(
-            vocab_size, embed_size, num_heads, dropout, src_mask
+            vocab_size, embed_size, num_heads, dropout, src_mask, device
         )
         self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout)
         self.layernorm = nn.LayerNorm(embed_size)
@@ -182,6 +188,7 @@ class Encoder(nn.Module):
         self.block_num = block_num
         self.dropout = dropout
         self.ffn_hidden_size = ffn_hidden_size
+        self.device = device
 
         self.input_block = InputBlock(vocab_size, embed_size, device)
 
@@ -211,6 +218,7 @@ class Encoder(nn.Module):
             self.dropout,
             self.ffn_hidden_size,
             src_mask,
+            device=self.device,
         )
         self.encoder = nn.ModuleList([self.encoder_block for _ in range(self.block_num)])
         x = self.input_block(input_x)
@@ -220,7 +228,9 @@ class Encoder(nn.Module):
 
 
 if __name__ == "__main__":
+    # pass
+    device = torch.device("mps")
+    input_x = torch.randint(low=0, high=32, size=(32, 32), device=device)
+    encoder = Encoder(vocab_size=32, src_mask_flag=True, device=device)
+    print(encoder(input_x).shape)
     pass
-    # input_x = torch.randint(low=0, high=32, size=(32, 32))
-    # encoder = Encoder(vocab_size=32, src_mask_flag=True)
-    # print(encoder(input_x).shape)
