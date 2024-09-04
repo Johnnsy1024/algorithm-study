@@ -13,10 +13,11 @@ class DecoderBlock(nn.Module):
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
         trg_mask: torch.tensor = None,
+        device: torch.device = "cpu",
     ):
         super().__init__()
         self.masked_multi_head_attention = MaskedMutiHeadAttention(
-            vocab_size, embed_size, num_heads, dropout, trg_mask
+            vocab_size, embed_size, num_heads, dropout, trg_mask, device=device
         )
         self.encoder_decoder_multi_head_attention = DecoderMultiHeadAttention(
             vocab_size,
@@ -46,9 +47,15 @@ class MaskedMutiHeadAttention(MultiHeadAttention):
         num_heads: int,
         dropout: float,
         trg_mask: torch.tensor,
+        device: torch.device = "cpu",
     ):
         super().__init__(vocab_size, embed_size, num_heads, dropout)
         self.trg_mask = trg_mask
+        self.linear_key, self.linear_query, self.linear_value = (
+            nn.Linear(embed_size, embed_size, device=device),
+            nn.Linear(embed_size, embed_size, device=device),
+            nn.Linear(embed_size, embed_size, device=device),
+        )
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len, embed_size]

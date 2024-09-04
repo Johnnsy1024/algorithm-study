@@ -9,7 +9,7 @@ class InputEmbedding(nn.Module):
         vocab_size: int,
         embed_size: int,
         max_seq_len: int = 128,
-        device: str = "cpu",
+        device: torch.device = "cpu",
     ):
         super().__init__()
         self.input_embedding = nn.Embedding(vocab_size, embed_size, device=device)
@@ -64,15 +64,18 @@ class PositionalEncoding:
 
 
 class InputBlock(nn.Module):
-    def __init__(self, vocab_size: int, embed_size: int, device: str = "cpu"):
+    def __init__(self, vocab_size: int, embed_size: int, device: torch.device = "cpu"):
         super().__init__()
         self.device = device
         self.input_embedding = InputEmbedding(vocab_size, embed_size, device=device)
         self.positional_embedding = PositionalEncoding(embed_size)
+        self.device = device
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len]
-        x = self.input_embedding(input_x) + self.positional_embedding(input_x)
+        x = self.input_embedding(input_x) + self.positional_embedding(input_x).to(
+            self.device
+        )
 
         return x
 
@@ -92,11 +95,11 @@ class MultiHeadAttention(nn.Module):
         self.embed_size = embed_size
         self.num_heads = num_heads
         self.src_mask = src_mask
-        self.input_embedding = InputEmbedding(vocab_size, embed_size, device)
+        self.input_embedding = InputEmbedding(vocab_size, embed_size, device).to(device)
         self.positional_encoding = PositionalEncoding(embed_size)
-        self.linear_key = nn.Linear(embed_size, embed_size).to(device)
-        self.linear_query = nn.Linear(embed_size, embed_size).to(device)
-        self.linear_value = nn.Linear(embed_size, embed_size).to(device)
+        self.linear_key = nn.Linear(embed_size, embed_size, device=device)
+        self.linear_query = nn.Linear(embed_size, embed_size, device=device)
+        self.linear_value = nn.Linear(embed_size, embed_size, device=device)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, input_x: torch.tensor):
@@ -122,11 +125,15 @@ class MultiHeadAttention(nn.Module):
 
 class FeedForward(nn.Module):
     def __init__(
-        self, embed_size: int = 512, ffn_hidden_size: int = 2048, dropout: float = 0.1
+        self,
+        embed_size: int = 512,
+        ffn_hidden_size: int = 2048,
+        dropout: float = 0.1,
+        device: torch.device = "cpu",
     ):
         super().__init__()
-        self.linear_1 = nn.Linear(embed_size, ffn_hidden_size)
-        self.linear_2 = nn.Linear(ffn_hidden_size, embed_size)
+        self.linear_1 = nn.Linear(embed_size, ffn_hidden_size, device=device)
+        self.linear_2 = nn.Linear(ffn_hidden_size, embed_size, device=device)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, input_x: torch.tensor):
@@ -153,8 +160,8 @@ class EncoderBlock(nn.Module):
         self.multi_head_attention = MultiHeadAttention(
             vocab_size, embed_size, num_heads, dropout, src_mask, device
         )
-        self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout)
-        self.layernorm = nn.LayerNorm(embed_size)
+        self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout, device)
+        self.layernorm = nn.LayerNorm(embed_size, device=device)
 
     def forward(
         self, input_x: torch.tensor
@@ -175,7 +182,7 @@ class Encoder(nn.Module):
         max_seq_len: int = 64,
         src_mask_flag: bool = True,
         block_num: int = 6,
-        device: str = "cpu",
+        device: torch.device = "cpu",
     ):
         super().__init__()
         self.vocab_size = vocab_size
