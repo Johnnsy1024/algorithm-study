@@ -18,15 +18,15 @@ class DecoderBlock(nn.Module):
         super().__init__()
         self.masked_multi_head_attention = MaskedMutiHeadAttention(
             vocab_size, embed_size, num_heads, dropout, trg_mask, device=device
-        )
+        ).to(device)
         self.encoder_decoder_multi_head_attention = DecoderMultiHeadAttention(
             vocab_size,
             embed_size,
             num_heads,
             dropout,
         )
-        self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout)
-        self.layernorm = nn.LayerNorm(embed_size)
+        self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout, device=device)
+        self.layernorm = nn.LayerNorm(embed_size, device=device)
 
     def forward(self, input_x: torch.tensor, key: torch.tensor, value: torch.tensor):
         # input_x: [batch_size, seq_len, embed_size]
@@ -56,13 +56,14 @@ class MaskedMutiHeadAttention(MultiHeadAttention):
             nn.Linear(embed_size, embed_size, device=device),
             nn.Linear(embed_size, embed_size, device=device),
         )
+        self.device = device
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len, embed_size]
         batch_size, seq_len = input_x.shape[0], input_x.shape[1]
         attention_mask = torch.where(
             torch.tril(torch.ones((seq_len, seq_len), dtype=torch.bool)), 0, -1e20
-        )
+        ).to(self.device)
         key = self.linear_key(input_x).reshape((batch_size, seq_len, self.num_heads, -1))
         query = self.linear_query(input_x).reshape(
             (batch_size, seq_len, self.num_heads, -1)
@@ -109,14 +110,14 @@ class Decoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 120,
+        embed_size: int = 512,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
         max_seq_len: int = 64,
         trg_mask: bool = False,
         block_num: int = 6,
-        device: str = "cpu",
+        device: torch.device = "cpu",
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -129,6 +130,7 @@ class Decoder(nn.Module):
         self.dropout = dropout
         self.ffn_hidden_size = ffn_hidden_size
         self.trg_mask = trg_mask
+        self.device = device
         self.input_block = InputBlock(vocab_size, embed_size, device)
 
     def gen_trg_mask(self, trg, trg_padding_idx: int = 0):
@@ -152,6 +154,7 @@ class Decoder(nn.Module):
             self.num_heads,
             self.dropout,
             trg_mask=trg_mask,
+            device=self.device,
         )
         self.decoder = nn.ModuleList([self.decoder_block for _ in range(self.block_num)])
         x = self.input_block(trg)

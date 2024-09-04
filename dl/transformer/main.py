@@ -5,6 +5,7 @@ from data_tokenize import TranslateDataset, extract_raw_data, get_input, tokeniz
 from Decoder import Decoder
 from Encoder import Encoder
 from loguru import logger
+from lr_scheduler2 import TransformerLRScheduler
 from torch.utils.data import DataLoader
 
 # 提取原始语料数据
@@ -26,7 +27,7 @@ test_dataset = TranslateDataset(src_test_input, trg_test_input, 64, 64, tokenize
 
 
 # 生成DataLoader
-train_dataloader = DataLoader(train_dataset, batch_size=500, shuffle=True, drop_last=True)
+train_dataloader = DataLoader(train_dataset, batch_size=128, shuffle=True, drop_last=True)
 # test_dataloader = DataLoader(test_dataset, batch_size=56, shuffle=True)
 
 
@@ -78,36 +79,24 @@ model = Transformer(encoder, decoder, device)
 
 EPOCH = 10
 
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-1)
-# warmup_scheduler = LinearLR(optimizer, start_factor=0.2, total_iters=10)
-# base_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-# post_warmup_scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
+optimizer = torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9)
+scheduler = TransformerLRScheduler(optimizer, 512, 500)
 model = model.to(device)
 loss_func = nn.CrossEntropyLoss()
 for epoch in range(EPOCH):
     for batch_idx, (src, trg) in enumerate(train_dataloader):
         optimizer.zero_grad()
-        # src = src.to(device)
-        # trg = trg.to(device)
         output = model(src, trg)
         loss = loss_func(
             output.view(
                 -1,
-                5000,
+                30000,
             ).float(),
-            trg.view(-1),
+            trg.view(-1).to(device),
         )
-        # F.softmax(output, dim=-1).argmax()
-        loss.requires_grad_(True)
         loss.backward()
         optimizer.step()
-        # if batch_idx < 10 and loss.item() > 2.5:
-        #     warmup_scheduler.step()
-        # else:
-        #     optimizer.param_groups[0]["lr"] = 1e-8
-        #     # post_warmup_scheduler.step(batch_idx - 10)
-        if loss.item() < 2.8:
-            optimizer.param_groups[0]["lr"] = 0.0005
+        scheduler.step()
         logger.info(
             f"Epoch {epoch + 1}, batch {batch_idx + 1}: loss: {loss.item()}, lr: {optimizer.param_groups[0]['lr']}"
         )

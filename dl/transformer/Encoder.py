@@ -69,7 +69,6 @@ class InputBlock(nn.Module):
         self.device = device
         self.input_embedding = InputEmbedding(vocab_size, embed_size, device=device)
         self.positional_embedding = PositionalEncoding(embed_size)
-        self.device = device
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len]
@@ -175,7 +174,7 @@ class Encoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        embed_size: int = 120,
+        embed_size: int = 512,
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
