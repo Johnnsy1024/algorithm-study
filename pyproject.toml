@@ -26,6 +26,8 @@ lightgbm = "*"
 graphviz = "^0.20.3"
 kaggle = "^1.6.17"
 loguru = "*"
+keras = "^3.5.0"
+torchsummary = "^1.5.1"
 
 [[tool.poetry.source]]
 name = "mirrors"
