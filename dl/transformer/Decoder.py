@@ -7,7 +7,7 @@ from Encoder import FeedForward, InputBlock, MultiHeadAttention
 class DecoderBlock(nn.Module):
     def __init__(
         self,
-        vocab_size: int,
+        vocab_size: int = 30000,
         embed_size: int = 512,
         num_heads: int = 8,
         dropout: float = 0.1,
@@ -19,7 +19,7 @@ class DecoderBlock(nn.Module):
         self.masked_multi_head_attention = MaskedMutiHeadAttention(
             vocab_size, embed_size, num_heads, dropout, trg_mask, device=device
         ).to(device)
-        self.encoder_decoder_multi_head_attention = DecoderMultiHeadAttention(
+        self.cross_attention = DecoderMultiHeadAttention(
             vocab_size,
             embed_size,
             num_heads,
@@ -28,13 +28,17 @@ class DecoderBlock(nn.Module):
         self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout, device=device)
         self.layernorm = nn.LayerNorm(embed_size, device=device)
 
-    def forward(self, input_x: torch.tensor, key: torch.tensor, value: torch.tensor):
+    def forward(
+        self,
+        input_x: torch.tensor,
+        x_raw: torch.tensor,
+        key: torch.tensor,
+        value: torch.tensor,
+    ):
         # input_x: [batch_size, seq_len, embed_size]
         # key和value来源于Encoder的最终输出
         out_1 = self.layernorm(self.masked_multi_head_attention(input_x) + input_x)
-        out_2 = self.layernorm(
-            self.encoder_decoder_multi_head_attention(out_1, key, value) + out_1
-        )
+        out_2 = self.layernorm(self.cross_attention(out_1, key, value) + out_1)
         out_3 = self.layernorm(self.ffn(out_2) + out_2)
         return out_3
 
@@ -46,17 +50,15 @@ class MaskedMutiHeadAttention(MultiHeadAttention):
         embed_size: int,
         num_heads: int,
         dropout: float,
-        trg_mask: torch.tensor,
-        device: torch.device = "cpu",
+        trg_mask_flag: bool = True,
     ):
         super().__init__(vocab_size, embed_size, num_heads, dropout)
-        self.trg_mask = trg_mask
+        self.trg_mask_flag = trg_mask_flag
         self.linear_key, self.linear_query, self.linear_value = (
-            nn.Linear(embed_size, embed_size, device=device),
-            nn.Linear(embed_size, embed_size, device=device),
-            nn.Linear(embed_size, embed_size, device=device),
+            nn.Linear(embed_size, embed_size),
+            nn.Linear(embed_size, embed_size),
+            nn.Linear(embed_size, embed_size),
         )
-        self.device = device
 
     def forward(self, input_x: torch.tensor):
         # input_x: [batch_size, seq_len, embed_size]
