@@ -55,13 +55,13 @@ class MultiHeadAttention(nn.Module):
         embed_size: int = 512,
         num_heads: int = 8,
         dropout: float = 0.1,
-        src_mask: bool = True,
+        src_mask_flag: bool = True,
     ):
         super().__init__()
         assert embed_size % num_heads == 0, "Embedding维度必须可被num_heads整除"
         self.embed_size = embed_size
         self.num_heads = num_heads
-        self.src_mask = src_mask
+        self.src_mask = src_mask_flag
         self.linear_key = nn.Linear(embed_size, embed_size)
         self.linear_query = nn.Linear(embed_size, embed_size)
         self.linear_value = nn.Linear(embed_size, embed_size)
@@ -121,12 +121,12 @@ class EncoderBlock(nn.Module):
         num_heads: int = 8,
         dropout: float = 0.1,
         ffn_hidden_size: int = 2048,
-        src_mask: bool = True,
+        src_mask_flag: bool = True,
     ):
         super().__init__()
         assert embed_size % num_heads == 0, "Embedding维度必须可被num_heads整除"
         self.multi_head_attention = MultiHeadAttention(
-            embed_size, num_heads, dropout, src_mask
+            embed_size, num_heads, dropout, src_mask_flag
         )
         self.ffn = FeedForward(embed_size, ffn_hidden_size, dropout)
         self.layernorm = nn.LayerNorm(embed_size)
@@ -153,7 +153,6 @@ class Encoder(nn.Module):
         device: torch.device = "cpu",
     ):
         super().__init__()
-        self.vocab_size = vocab_size
         self.embed_size = embed_size
         self.src_mask_flag = src_mask_flag
         self.num_heads = num_heads
